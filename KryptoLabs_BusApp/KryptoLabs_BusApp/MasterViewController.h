@@ -8,15 +8,15 @@
 #import <UIKit/UIKit.h>
 #import <MapKit/MapKit.h>
 #import "BusStopManager.h"
-
-@class DetailViewController;
+#import "BusListController.h"
 
 @interface MasterViewController : UIViewController<MKMapViewDelegate, BusControllerDelegate>
 {
     BusStopManager *busStopManager;
+    NSMutableArray *busStopList;
 }
 
-@property (strong, nonatomic) DetailViewController *detailViewController;
+@property (strong, nonatomic) BusListController *busListController;
 @property (weak, nonatomic) IBOutlet MKMapView *mapView;
 
 @end

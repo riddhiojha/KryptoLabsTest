@@ -14,10 +14,19 @@
 
 @interface BusStopManager : NSObject<NSURLConnectionDelegate, NSURLSessionDelegate>
 {
+    NSURLConnection *fetchBusStopConnection;
+    NSURLConnection *fetchBusListConnection;
+    NSURLConnection *fetchBusRouteConnection;
+
     NSMutableData *responseData;
+    NSMutableData *busStopListResponseData;
+    NSMutableData *busListResponseData;
+    NSMutableData *busRouteResponseData;
     
 }
 @property (nonatomic, assign) id<BusControllerDelegate> m_BusControllerDelegate;
 
 - (void) fetchBusStops :(NSDictionary *)userData;
+- (void) fetchBusList :(NSString *)busStopId;
+- (void) fetchBusRoute :(NSString *)busId;
 @end

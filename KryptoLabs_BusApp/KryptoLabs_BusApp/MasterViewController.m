@@ -22,7 +22,6 @@
     busStopManager = [[BusStopManager alloc] init];
     busStopManager.m_BusControllerDelegate = self;
     [busStopManager fetchBusStops:nil];
-    self.detailViewController = (DetailViewController *)[[self.splitViewController.viewControllers lastObject] topViewController];
 }
 
 -(void)viewDidAppear:(BOOL)animated
@@ -72,7 +71,6 @@
     region.span.longitudeDelta = spanY;
 }
 
-
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 }
@@ -80,18 +78,7 @@
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
-
-
-- (void)insertNewObject:(id)sender {
-    if (!self.objects) {
-        self.objects = [[NSMutableArray alloc] init];
-    }
-    [self.objects insertObject:[NSDate date] atIndex:0];
-    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
-}
-
 
 #pragma mark - Segues
 
@@ -104,19 +91,25 @@
 //        controller.navigationItem.leftBarButtonItem = self.splitViewController.displayModeButtonItem;
 //        controller.navigationItem.leftItemsSupplementBackButton = YES;
     }
+    else if ([[segue identifier] isEqualToString:@"openBusList"]) {
+        MKPointAnnotation *annotation = (MKPointAnnotation *)sender;
+        
+        BusListController *controller = (BusListController *)[segue destinationViewController];
+        NSString *busStopId = [self getBusIdForTitle :annotation.title];
+        [controller setBusStopId:busStopId];
+    }
 }
 
 #pragma mark - Busstopmanager delegate
 - (void) busStopRequestCallback : (NSDictionary *)responseDictionary
 {
-    NSMutableArray *responseArray = responseDictionary[@"response"];
-    [self addAllAnnotations:responseArray];
-    
+    busStopList = responseDictionary[@"response"];
+    [self addAllAnnotations];
 }
 
 
 
--(void)addAllAnnotations : (NSMutableArray *) busStopList
+-(void)addAllAnnotations
 {
     self.mapView.delegate=self;
     for(int i = 0; i < busStopList.count; i++)
@@ -134,13 +127,10 @@
     MKPointAnnotation *mapPin = [[MKPointAnnotation alloc] init];
     double longitude = [coordinates[0] doubleValue];
     double latitude = [coordinates[1] doubleValue];
-    
-    // setup the map pin with all data and add to map view
     CLLocationCoordinate2D coordinate = CLLocationCoordinate2DMake(latitude, longitude);
     
     mapPin.title = title;
     mapPin.coordinate = coordinate;
-    
     [self.mapView addAnnotation:mapPin];
 }
 
@@ -156,42 +146,39 @@
     [mapView setVisibleMapRect:zoomRect animated:YES];
 }
 
-//
-//#pragma mark - Table View
-//
-//- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-//    return 1;
-//}
-//
-//
-//- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-//    return self.objects.count;
-//}
-//
-//
-//- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-//    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
-//
-//    NSDate *object = self.objects[indexPath.row];
-//    cell.textLabel.text = [object description];
-//    return cell;
-//}
-//
-//
-//- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-//    // Return NO if you do not want the specified item to be editable.
-//    return YES;
-//}
-//
-//
-//- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-//    if (editingStyle == UITableViewCellEditingStyleDelete) {
-//        [self.objects removeObjectAtIndex:indexPath.row];
-//        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-//    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
-//        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view.
-//    }
-//}
-//
+#pragma mark - Bus name to ID
+- (NSString *) getBusIdForTitle : (NSString *)busStopName
+{
+    for (int i=0; i<busStopList.count; i++) {
+        NSString *compareToName = busStopList[i][@"name"];
+        if ([busStopName isEqualToString:compareToName]) {
+            return busStopList[i][@"id"];
+        }
+    }
+    return nil;
+}
+
+#pragma mark - MapView delegate
+- (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id <MKAnnotation>)annotation {
+    MKAnnotationView *annotationView = [self.mapView dequeueReusableAnnotationViewWithIdentifier:@"String"];
+    if(!annotationView) {
+        annotationView = [[MKAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"String"];
+        annotationView.rightCalloutAccessoryView = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
+    }
+    annotationView.image = [UIImage imageNamed:@"AnnotationImage"];
+    annotationView.enabled = YES;
+    annotationView.canShowCallout = YES;
+    
+    return annotationView;
+}
+
+- (void)mapView:(MKMapView *)mapView annotationView:(MKAnnotationView *)view calloutAccessoryControlTapped:(UIControl *)control
+{
+    id <MKAnnotation> annotation = [view annotation];
+    if ([annotation isKindOfClass:[MKPointAnnotation class]])
+    {
+        [self performSegueWithIdentifier:@"openBusList" sender:annotation];
+    }
+}
 
 @end
