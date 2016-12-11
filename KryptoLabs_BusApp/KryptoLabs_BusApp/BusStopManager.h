@@ -19,10 +19,6 @@
     NSURLConnection *fetchBusRouteConnection;
 
     NSMutableData *responseData;
-    NSMutableData *busStopListResponseData;
-    NSMutableData *busListResponseData;
-    NSMutableData *busRouteResponseData;
-    
 }
 @property (nonatomic, assign) id<BusControllerDelegate> m_BusControllerDelegate;
 

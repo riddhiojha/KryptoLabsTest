@@ -8,6 +8,8 @@
 #import "AppDelegate.h"
 #import "DetailViewController.h"
 
+#define THEME_COLOR [UIColor colorWithRed:253.0/255.0 green:116.0/255.0 blue:118.0/255.0 alpha:0.8]
+
 @interface AppDelegate () <UISplitViewControllerDelegate>
 
 @end
@@ -20,6 +22,8 @@
     UISplitViewController *splitViewController = (UISplitViewController *)self.window.rootViewController;
     UINavigationController *navigationController = [splitViewController.viewControllers lastObject];
     navigationController.topViewController.navigationItem.leftBarButtonItem = splitViewController.displayModeButtonItem;
+    navigationController.navigationBar.barTintColor = THEME_COLOR;
+    navigationController.navigationBar.tintColor = [UIColor whiteColor];
     splitViewController.delegate = self;
     return YES;
 }

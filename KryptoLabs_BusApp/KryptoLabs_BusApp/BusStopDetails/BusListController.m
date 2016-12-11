@@ -17,6 +17,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.title = @"List of buses";
 }
 
 - (void)didReceiveMemoryWarning {
