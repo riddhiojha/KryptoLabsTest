@@ -10,12 +10,13 @@
 #import "BusStopManager.h"
 #import "BusListController.h"
 
-@interface MasterViewController : UIViewController<MKMapViewDelegate, BusControllerDelegate>
+@interface MasterViewController : UIViewController<MKMapViewDelegate, BusControllerDelegate, CLLocationManagerDelegate>
 {
     BusStopManager *busStopManager;
     NSMutableArray *busStopList;
+    BOOL isUpdatingLocation;
 }
-
+@property (strong, nonatomic) CLLocationManager *locationManager;
 @property (strong, nonatomic) BusListController *busListController;
 @property (weak, nonatomic) IBOutlet MKMapView *mapView;
 

@@ -15,23 +15,38 @@
 
 @implementation MasterViewController
 @synthesize mapView;
+@synthesize locationManager;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
     busStopManager = [[BusStopManager alloc] init];
     busStopManager.m_BusControllerDelegate = self;
-    [busStopManager fetchBusStops:nil];
+//    [busStopManager fetchBusStops:nil];
+    self.locationManager = [[CLLocationManager alloc] init];
+    self.locationManager.delegate = self;
+    [self.locationManager requestWhenInUseAuthorization];
+   
 }
 
 -(void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
+        [self.navigationController setNavigationBarHidden:YES animated:YES];
     if ([CLLocationManager locationServicesEnabled]){
-        
-        NSLog(@"Location Services Enabled");
-        mapView.showsUserLocation = YES;
-        [self zoomToCurrentLocation];
+        CLAuthorizationStatus authorizationStatus= [CLLocationManager authorizationStatus];
+        if (authorizationStatus == kCLAuthorizationStatusAuthorizedAlways ||
+            authorizationStatus == kCLAuthorizationStatusAuthorizedWhenInUse) {
+            self.locationManager.desiredAccuracy=kCLLocationAccuracyBest;
+            self.locationManager.distanceFilter=kCLDistanceFilterNone;
+            [self.locationManager startMonitoringSignificantLocationChanges];
+            [self.locationManager startUpdatingLocation];
+            isUpdatingLocation = YES;
+            mapView.showsUserLocation = YES;
+        }
+        else
+        {
+            [self.locationManager requestWhenInUseAuthorization];
+        }
     }
     else
     {
@@ -61,16 +76,6 @@
 
 }
 
-- (void)zoomToCurrentLocation {
-    float spanX = 0.00725;
-    float spanY = 0.00725;
-    MKCoordinateRegion region;
-    region.center.latitude = self.mapView.userLocation.coordinate.latitude;
-    region.center.longitude = self.mapView.userLocation.coordinate.longitude;
-    region.span.latitudeDelta = spanX;
-    region.span.longitudeDelta = spanY;
-}
-
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 }
@@ -83,15 +88,7 @@
 #pragma mark - Segues
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    if ([[segue identifier] isEqualToString:@"showDetail"]) {
-//        NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
-//        NSDate *object = self.objects[indexPath.row];
-//        DetailViewController *controller = (DetailViewController *)[[segue destinationViewController] topViewController];
-//        [controller setDetailItem:object];
-//        controller.navigationItem.leftBarButtonItem = self.splitViewController.displayModeButtonItem;
-//        controller.navigationItem.leftItemsSupplementBackButton = YES;
-    }
-    else if ([[segue identifier] isEqualToString:@"openBusList"]) {
+    if ([[segue identifier] isEqualToString:@"openBusList"]) {
         MKPointAnnotation *annotation = (MKPointAnnotation *)sender;
         
         BusListController *controller = (BusListController *)[segue destinationViewController];
@@ -159,6 +156,20 @@
 }
 
 #pragma mark - MapView delegate
+
+-(void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation
+{
+    float spanX = 0.1;
+    float spanY = 0.1;
+    MKCoordinateRegion region;
+    NSLog(@"%f -------- %f", self.mapView.userLocation.location.coordinate.latitude, self.mapView.userLocation.location.coordinate.longitude);
+    region.center.latitude = self.mapView.userLocation.location.coordinate.latitude;
+    region.center.longitude = self.mapView.userLocation.location.coordinate.longitude;
+    region.span.latitudeDelta = spanX;
+    region.span.longitudeDelta = spanY;
+    [self.mapView setRegion:region];
+    
+}
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id <MKAnnotation>)annotation {
     MKAnnotationView *annotationView = [self.mapView dequeueReusableAnnotationViewWithIdentifier:@"String"];
     if(!annotationView) {
@@ -179,6 +190,44 @@
     {
         [self performSegueWithIdentifier:@"openBusList" sender:annotation];
     }
+}
+
+#pragma mark - CLLocation manager delegate
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
+{
+    CLLocation *newLocation = locations[[locations count] -1];
+    CLLocation *currentLocation = newLocation;
+    NSString *longitude = [NSString stringWithFormat:@"%.5f", currentLocation.coordinate.longitude];
+    NSString *latitude = [NSString stringWithFormat:@"%.5f", currentLocation.coordinate.latitude];
+
+    if (currentLocation != nil && isUpdatingLocation)
+    {
+        isUpdatingLocation = NO;
+        float spanX = 0.1;
+        float spanY = 0.1;
+        MKCoordinateRegion region;
+        region.center.latitude = currentLocation.coordinate.latitude;
+        region.center.longitude = currentLocation.coordinate.longitude;
+        region.span.latitudeDelta = spanX;
+        region.span.longitudeDelta = spanY;
+        [self.mapView setRegion:region];
+        NSDictionary *dictionary = [[NSDictionary alloc] initWithObjectsAndKeys:longitude,@"longitude",
+                                    latitude, @"latitude", nil];
+        [busStopManager fetchBusStops:dictionary];
+
+    }
+    else if (currentLocation !=nil)
+    {
+//        [locationManager stopUpdatingLocation];
+    }
+    else {
+          UIAlertView *errorAlert = [[UIAlertView alloc]
+                                     initWithTitle:@"Error" message:@"Unable to Get Your Location"
+                                     delegate:nil
+                                     cancelButtonTitle:@"OK"
+                                     otherButtonTitles:nil];
+          [errorAlert show];
+      }
 }
 
 @end
