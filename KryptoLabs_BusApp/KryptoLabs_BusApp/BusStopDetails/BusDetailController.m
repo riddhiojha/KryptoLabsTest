@@ -17,12 +17,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"Bus details";
-    // Do any additional setup after loading the view.
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 - (void)setBusId:(NSString *)busId {
@@ -41,7 +39,27 @@
     destinationLabel.text = busData[@"destination"];
     
     NSMutableArray * coordinatesArray = responseDictionary[@"response"][@"points"];
-    [self performSelector:@selector(drawPolylineOnMap:) withObject:coordinatesArray afterDelay:0.02];
+    if (!coordinatesArray.count) {
+        [activityMapIndicator stopAnimating];
+        UIAlertController *alertController = [UIAlertController
+                                              alertControllerWithTitle:@"Error"
+                                              message:@"Unable to get details for this bus. Please try again later."
+                                              preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction
+                                   actionWithTitle:NSLocalizedString(@"OK", @"OK action")
+                                   style:UIAlertActionStyleDefault
+                                   handler:^(UIAlertAction *action)
+                                   {
+                                       NSLog(@"OK action");
+                                   }];
+        [alertController addAction:okAction];
+        [self presentViewController:alertController animated:YES completion:nil];
+        
+    }
+    else
+    {
+        [self performSelector:@selector(drawPolylineOnMap:) withObject:coordinatesArray afterDelay:0.02];        
+    }
 }
 
 - (void) drawPolylineOnMap : (NSMutableArray *)coordinatesArray
@@ -57,7 +75,7 @@
     
     CLLocationCoordinate2D coordinates[cordArray.count];
     //int i = 0;
-    int numPoints = [cordArray count];
+    int numPoints = (int)[cordArray count];
     for (int i = 0; i<numPoints;i++)
     {
         CLLocation * current = [cordArray objectAtIndex:i];
@@ -83,8 +101,6 @@
     
     return nil;
 }
-
-
 
 -(void)zoomToPolyLine: (MKMapView*)map polyline: (MKPolyline*)polyline animated: (BOOL)animated
 {
