@@ -14,7 +14,9 @@
 - (void) fetchBusStops :(NSDictionary *)userData
 {
     //method to call bus stop web service
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://54.255.135.90/busservice/api/v1/bus-stops/radius?lat=%@&lon=%@&radius=500",userData[@"latitude"],userData[@"longitude"]]];
+//    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://54.255.135.90/busservice/api/v1/bus-stops/radius?lat=%@&lon=%@&radius=500",userData[@"latitude"],userData[@"longitude"]]];
+    NSURL *url = [NSURL URLWithString:@"http://54.255.135.90/busservice/api/v1/bus-stops/radius?lat=24.44072&lon=54.44392&radius=500"];
+
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
     [request setHTTPMethod:@"GET"];
     fetchBusStopConnection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
