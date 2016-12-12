@@ -19,6 +19,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    //initialize managers
     busStopManager = [[BusStopManager alloc] init];
     busStopManager.m_BusControllerDelegate = self;
 //    [busStopManager fetchBusStops:nil];
@@ -31,7 +32,8 @@
 -(void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
-        [self.navigationController setNavigationBarHidden:YES animated:YES];
+    [self.navigationController setNavigationBarHidden:YES animated:YES];
+    //check location authorization status
     if ([CLLocationManager locationServicesEnabled]){
         CLAuthorizationStatus authorizationStatus= [CLLocationManager authorizationStatus];
         if (authorizationStatus == kCLAuthorizationStatusAuthorizedAlways ||
@@ -50,6 +52,7 @@
     }
     else
     {
+        //show alert when location services disabled
         UIAlertController *alertController = [UIAlertController
                                               alertControllerWithTitle:@"App Permission Denied"
                                               message:@"To re-enable, please go to Settings and turn on Location Service for this app."
@@ -88,9 +91,9 @@
 #pragma mark - Segues
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    //pass parameters when opening segue
     if ([[segue identifier] isEqualToString:@"openBusList"]) {
         MKPointAnnotation *annotation = (MKPointAnnotation *)sender;
-        
         BusListController *controller = (BusListController *)[segue destinationViewController];
         NSString *busStopId = [self getBusIdForTitle :annotation.title];
         [controller setBusStopId:busStopId];
@@ -100,6 +103,7 @@
 #pragma mark - Busstopmanager delegate
 - (void) busStopRequestCallback : (NSDictionary *)responseDictionary
 {
+    //handle callback from bus list web service
     busStopList = responseDictionary[@"response"];
     [self addAllAnnotations];
 }
@@ -108,6 +112,7 @@
 
 -(void)addAllAnnotations
 {
+    //add all nearby bus stop location annotations
     self.mapView.delegate=self;
     for(int i = 0; i < busStopList.count; i++)
     {
@@ -133,6 +138,7 @@
 
 - (void) setMapViewRect
 {
+    //set viewable rect for map showing all annotations
     MKMapRect zoomRect = MKMapRectNull;
     for (id <MKAnnotation> annotation in mapView.annotations)
     {
@@ -170,7 +176,9 @@
     [self.mapView setRegion:region];
     
 }
-- (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id <MKAnnotation>)annotation {
+- (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id <MKAnnotation>)annotation
+{
+    //add custom annotation image
     MKAnnotationView *annotationView = [self.mapView dequeueReusableAnnotationViewWithIdentifier:@"String"];
     if(!annotationView) {
         annotationView = [[MKAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:@"String"];
@@ -185,6 +193,7 @@
 
 - (void)mapView:(MKMapView *)mapView annotationView:(MKAnnotationView *)view calloutAccessoryControlTapped:(UIControl *)control
 {
+    //enable callout
     id <MKAnnotation> annotation = [view annotation];
     if ([annotation isKindOfClass:[MKPointAnnotation class]])
     {
@@ -195,6 +204,7 @@
 #pragma mark - CLLocation manager delegate
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
 {
+    //when update location-fetch coordinates and get bus stops
     CLLocation *newLocation = locations[[locations count] -1];
     CLLocation *currentLocation = newLocation;
     NSString *longitude = [NSString stringWithFormat:@"%.5f", currentLocation.coordinate.longitude];
@@ -228,6 +238,34 @@
                                      otherButtonTitles:nil];
           [errorAlert show];
       }
+}
+
+-(void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)authorizationStatus {
+    //when first time authorisation changes, handle accordingly
+    if (authorizationStatus == kCLAuthorizationStatusDenied) {
+        UIAlertController *alertController = [UIAlertController
+                                              alertControllerWithTitle:@"App Permission Denied"
+                                              message:@"Permission denied to acces your location."
+                                              preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction
+                                   actionWithTitle:NSLocalizedString(@"OK", @"OK action")
+                                   style:UIAlertActionStyleDefault
+                                   handler:^(UIAlertAction *action)
+                                   {
+                                       NSLog(@"OK action");
+                                   }];
+        [alertController addAction:okAction];
+        [self presentViewController:alertController animated:YES completion:nil];
+    }
+    else if (authorizationStatus == kCLAuthorizationStatusAuthorizedAlways ||
+        authorizationStatus == kCLAuthorizationStatusAuthorizedWhenInUse) {
+        self.locationManager.desiredAccuracy=kCLLocationAccuracyBest;
+        self.locationManager.distanceFilter=kCLDistanceFilterNone;
+        [self.locationManager startMonitoringSignificantLocationChanges];
+        [self.locationManager startUpdatingLocation];
+        isUpdatingLocation = YES;
+        mapView.showsUserLocation = YES;
+    }
 }
 
 @end

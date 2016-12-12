@@ -13,7 +13,8 @@
 #pragma mark - Fetch methods
 - (void) fetchBusStops :(NSDictionary *)userData
 {
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://54.255.135.90/busservice/api/v1/bus-stops/radius?lat=%@&lon=%@&radius=50000",userData[@"latitude"],userData[@"longitude"]]];
+    //method to call bus stop web service
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://54.255.135.90/busservice/api/v1/bus-stops/radius?lat=%@&lon=%@&radius=500",userData[@"latitude"],userData[@"longitude"]]];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
     [request setHTTPMethod:@"GET"];
     fetchBusStopConnection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
@@ -24,6 +25,7 @@
 }
 - (void) fetchBusList:(NSString *)busStopId
 {
+    //method to fetch bus list
     NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://54.255.135.90/busservice/api/v1/buses/%@/bus-stops", busStopId]];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
     [request setHTTPMethod:@"GET"];
@@ -36,6 +38,7 @@
 
 - (void) fetchBusRoute:(NSString *)busId
 {
+    //method to fetch bus route
     NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://54.255.135.90/busservice/api/v1/buses/%@/route", busId]];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
     [request setHTTPMethod:@"GET"];
@@ -74,7 +77,7 @@
     }
     else {
     }
-    
+    //respond to corresponding delegates when callback is received
     if (connection ==  fetchBusStopConnection) {
         if (self.m_BusControllerDelegate && [self.m_BusControllerDelegate respondsToSelector:@selector(busStopRequestCallback:)]){
             [self.m_BusControllerDelegate busStopRequestCallback:responseDictionary];

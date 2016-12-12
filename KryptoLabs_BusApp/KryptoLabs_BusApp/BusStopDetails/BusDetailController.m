@@ -32,6 +32,7 @@
 #pragma mark - Busstopmanager delegate
 - (void) busStopRequestCallback : (NSDictionary *)responseDictionary
 {
+    //assign data to corresponding labels
     NSDictionary *busData = responseDictionary[@"response"][@"bus"];
     nameLabel.text = busData[@"name"];
     busNumber.text = busData[@"number"];
@@ -58,12 +59,14 @@
     }
     else
     {
+        //draw bus route
         [self performSelector:@selector(drawPolylineOnMap:) withObject:coordinatesArray afterDelay:0.02];        
     }
 }
 
 - (void) drawPolylineOnMap : (NSMutableArray *)coordinatesArray
 {
+    //draw polyline for bus route array coordinates
     NSMutableArray * cordArray = [[NSMutableArray alloc]init];
     for (int i = 0;i < coordinatesArray.count; i++)
     {
@@ -104,6 +107,7 @@
 
 -(void)zoomToPolyLine: (MKMapView*)map polyline: (MKPolyline*)polyline animated: (BOOL)animated
 {
+    //zoom mkmapview to bus route
     [map setVisibleMapRect:[polyline boundingMapRect] edgePadding:UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0) animated:animated];
 }
 

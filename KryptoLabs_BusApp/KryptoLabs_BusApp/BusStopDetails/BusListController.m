@@ -53,6 +53,7 @@
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     indexPathSelected = indexPath;
+    //open bus detail when did select row
     [self performSegueWithIdentifier:@"openBusDetail" sender:nil];
     
 }

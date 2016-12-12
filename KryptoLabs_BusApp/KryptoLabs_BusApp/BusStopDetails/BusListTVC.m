@@ -5,7 +5,7 @@
 //  Created by Riddhi Ojha on 12/10/16.
 //  Copyright © 2016 Riddhi Ojha. All rights reserved.
 //
-
+//custom cell for bus list cell
 #import "BusListTVC.h"
 
 @implementation BusListTVC
